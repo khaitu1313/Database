@@ -1,0 +1,45 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+     <h3 class="title-section">Store</h3>
+     <br>
+
+
+     <form method="get">
+         {{ form.as_p }}
+         <input type="submit" value="Submit" class="btn btn-primary"></input>
+     </form>
+
+     <div class="category-section">
+          <h4 class="section-title">Laptop</h4>
+          <div class="row">
+          {% for product in laptops %}
+          <div class="col-lg-4">
+               <div class="box-element">
+                    <img class="thumbnail" src="{{ product.id.image}}">
+                    <div class="box-element product">
+                         <h5><strong>{{ product.id.name }}</strong></h5>
+                         <h6><strong>{{ product.id.b_name }}</strong></h6>
+                         <hr>
+                         <button data-product="{{ product.id }}" data-action="add"
+                                 class="btn btn-outline-secondary add-btn update-cart">Purchase Now</button>
+
+                         <h5 style="display: inline-block; float: right">{{ product.id.price|floatformat:0 }}đ</h5>
+
+                         <div id="info-{{ product.id }}" class="extra-info" style="margin-top: 5px;">
+                            <h6><strong>RAM:</strong> {{ product.ram }} GB</h6>
+                            <h6><strong>CPU:</strong> {{ product.cpu }}</h6>
+                            <h6><strong>Graphic Card:</strong> {{ product.graphic_card }}</h6>
+                            <h6><strong>Purpose:</strong> {{ product.purpose }}</h6>
+                            <h6><strong>Status:</strong> {{ product.id.status }}</h6>
+                            <h6><strong>Discounts:</strong> {{ product.id.get_discount_programs }}</h6>
+                         </div>
+                    </div>
+               </div>
+          </div>
+          <br>
+          {% endfor %}
+          </div>
+     </div>
+
+{% endblock content %}

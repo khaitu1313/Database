@@ -1,0 +1,150 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+
+<div class="row">
+     <div class="col-lg-6">
+          <div class="box-element" id="form-wrapper">
+               <form id="form">
+                    {% csrf_token %}
+                    <div id="user-info">
+                         <div class="form-field">
+							<input required class="form-control" type="text" name="name" placeholder="Name..">
+						 </div>
+                    </div>
+                    <div id="shipping-info">
+						 <p>Shipping Information:</p>
+						 <hr>
+						 <div class="form-field">
+							<input class="form-control" type="text" name="address" placeholder="Address..">
+						 </div>
+                         <div class="form-field">
+							<input class="form-control" type="text" name="street" placeholder="Street..">
+						 </div>
+						 <div class="form-field">
+							<input class="form-control" type="text" name="district" placeholder="District..">
+						 </div>
+						 <div class="form-field">
+							<input class="form-control" type="text" name="ward" placeholder="Ward..">
+						 </div>
+                    </div>
+                    <hr>
+                    <input id="form-button" class="btn btn-success btn-block" type="submit" value="Continue">
+
+               </form>
+
+          </div>
+
+          <br>
+          <div id="payment-methods" class="hidden">
+               <h4> Choose Payment Method </h4>
+               {% for payment_method in payment_methods %}
+                 <button class="btn btn-primary payment-method" data-type="{{ payment_method.type }}">{{ payment_method.type }}</button>
+               {% endfor %}
+          </div>
+
+     </div>
+
+     <div class="col-lg-6">
+          <div class="box-element">
+               <a class="btn btn-outline-dark" href="{% url 'store' %}">&#x2190; Back to Store </a>
+               <hr>
+               <h3> Order Summary </h3>
+               <hr>
+              <h5> Items: {{ order.get_cart_items }}</h5>
+              <h5> Total: {{ order.get_cart_total|floatformat:0}}đ </h5>
+              {% for item in items  %}
+               <div class="cart-row">
+                  <div style="flex:2"><img class="row-image" src="{{item.product.image}}"></div>
+                  <div style="flex:2"><p>{{ item.product.name }}</p></div>
+                  <div style="flex:1"><p>{{ item.product.price|floatformat:0 }}đ </p></div>
+                   <div style="flex:1"><p>x{{ item.quantity}}</p></div>
+               </div>
+              {% endfor %}
+
+          </div>
+     </div>
+</div>
+<script type="text/javascript">
+     var total = '{{order.get_cart_total}}'
+     var shipping = '{{order.shipping}}'
+
+     if (user != 'AnonymousUser'){
+           document.getElementById('user-info').innerHTML = ''
+      }
+  
+    if (shipping == 'False' && user != 'AnonymousUser') {
+      //Hide entire form if user is logged in and shipping is false
+      document.getElementById('form-wrapper').classList.add("hidden");
+      //Show payment methods if logged in user wants to buy an item that does not require shipping
+      document.getElementById('payment-methods').classList.remove("hidden");
+    }
+  
+    var form = document.getElementById('form')
+    form.addEventListener('submit', function(e){
+      e.preventDefault()
+      console.log('Form Submitted...')
+      document.getElementById('form-button').classList.add('hidden');
+      document.getElementById('payment-methods').classList.remove("hidden");
+      
+    })
+  
+    const paymentButtons = document.querySelectorAll('.payment-method');
+    paymentButtons.forEach(button => {
+      button.addEventListener('click', function(e){
+        const paymentType = e.target.dataset.type;
+        submitFormData(paymentType);
+      })
+    });
+  
+    function submitFormData(paymentType){
+      console.log('Payment method selected:', paymentType)
+  
+      var userFormData = {
+        'name': null,
+        'total': total,
+      }
+  
+      var shippingInfo = {
+        'address': null,
+        'street': null,
+        'district': null,
+        'ward': null,
+      }
+  
+      if (shipping != 'False'){
+        shippingInfo.address = form.address.value
+        shippingInfo.street = form.street.value
+        shippingInfo.district = form.district.value
+        shippingInfo.ward = form.ward.value
+      }
+  
+      if (user == 'AnonymousUser'){
+        userFormData.name = form.name.value
+      }
+  
+      console.log('Shipping Info:', shippingInfo)
+      console.log('User Info:', userFormData)
+  
+      var url = "/process_order/"
+      fetch(url, {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'X-CSRFToken':csrftoken,
+        },
+        body:JSON.stringify({'form':userFormData, 'shipping':shippingInfo, 'payment_type': paymentType}),
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('Success:', data);
+        alert('Transaction completed');
+  
+        cart = {}
+        document.cookie ='cart=' + JSON.stringify(cart) + ";domain=;path=/"
+  
+        window.location.href = "{% url 'store' %}"
+      })
+    }
+</script>
+{% endblock content %}
